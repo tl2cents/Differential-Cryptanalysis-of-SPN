@@ -6,6 +6,20 @@ import pickle
 import networkx as nx
 import matplotlib.pyplot as plt
 
+
+def generate_Sbox(nbits = 4):
+    # return S and S_INV
+    L = list(range(2**nbits))
+    random.shuffle(L)
+    return {i:j for i,j in enumerate(L)},{j:i for i,j in enumerate(L)}
+
+def generate_permutation(LEN = 16):
+    # return P and P_inv
+    L = list(range(LEN))
+    random.shuffle(L)
+    return {i:j for i,j in enumerate(L)},{j:i for i,j in enumerate(L)}
+
+    
 # (1) Substitution: 4x4 bijective, one sbox used for all 4 sub-blocks of size 4. Nibble wise
 sbox = {0: 0xE, 1: 0x4, 2: 0xD, 3: 0x1, 4: 0x2, 5: 0xF, 6: 0xB, 7: 0x8, 8: 0x3,
         9: 0xA, 0xA: 0x6, 0xB: 0xC, 0xC: 0x5, 0xD: 0x9, 0xE: 0x0, 0xF: 0x7}  # key:value
@@ -17,6 +31,15 @@ pbox = {0: 0, 1: 4, 2: 8, 3: 12, 4: 1, 5: 5, 6: 9, 7: 13,
         8: 2, 9: 6, 10: 10, 11: 14, 12: 3, 13: 7, 14: 11, 15: 15}
 pbox_inv = {0: 0, 4: 1, 8: 2, 12: 3, 1: 4, 5: 5, 9: 6, 13: 7,
             2: 8, 6: 9, 10: 10, 14: 11, 3: 12, 7: 13, 11: 14, 15: 15}
+
+new_box = True
+if new_box:
+    sbox,sbox_inv = generate_Sbox()
+    pbox,pbox_inv = generate_permutation()
+    S = Sbox(sbox)
+    print(f"[+] sbox = {sbox} \n[+] pbox = {pbox}")
+    
+    print(f"[+] new box table :\n {S.difference_distribution_table() = }")
 # modify accordingly
 def do_sbox(number):
     return sbox[number]
@@ -207,10 +230,15 @@ class active_sbox_analyzr():
             edges = source[start_node]
             G.add_node(start_node)
             for end_node, w in edges:
-                G.add_edge(start_node, end_node, weight = w)
+                G.add_edge(start_node, end_node)
+        print(f"[+] {len(G.nodes()) = }")
+        print(f"[+] {len(G.edges()) = }")
+        
         cs = list(nx.simple_cycles(G))
         if len(cs) != 0 :
             print("[+] circle found")
+            for circle in cs:
+                print(f"[+] {circle = } with avg_active_sbox_num =  {1.0}")
             return cs
         else:
             try:
@@ -222,14 +250,14 @@ class active_sbox_analyzr():
                 dag_longest_path = nx.dag_longest_path(G)
                 print(f"[+] {dag_longest_path = }")
                 
-    def find_circle_of_2_active_sbox_path(self, two_active_num = 2):
-        source = self.set_up_directed_graph(filter_bound = 2)
+    def find_circle_with_extra_n_active_sbox_path(self, active_num_ls = [2,3], extra_nodes_num = 2):
+        source = self.set_up_directed_graph(filter_bound = max(active_num_ls))
         G = nx.DiGraph()
         # load all one active_sbox
-        set_of_2_active_diff = [x for x in source if ACTIVE_SBOX_TABLE[x]==2]
+        set_of_n_active_diffs = [x for x in source if ACTIVE_SBOX_TABLE[x] in active_num_ls]
         set_of_1_active_diff = [x for x in source if ACTIVE_SBOX_TABLE[x]==1]
         assert len(set_of_1_active_diff) == 4*15
-        candidates = combinations(set_of_2_active_diff,two_active_num)
+        candidates = combinations(set_of_n_active_diffs, extra_nodes_num)
         
         for start_node in set_of_1_active_diff:
             G.add_node(start_node)
@@ -273,4 +301,6 @@ class active_sbox_analyzr():
 
 if __name__ == "__main__":
     analyzer = active_sbox_analyzr()
-    analyzer.find_circle_of_2_active_sbox_path()
+    analyzer.find_circle_of_one_active_sbox_path()
+    # analyzer.find_circle_with_extra_n_active_sbox_path([2,3],2)
+    

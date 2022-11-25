@@ -69,6 +69,22 @@ def compute_active_sbox_table():
                 cnt+=1
         table.append(cnt)
     return table
+
+
+from multiprocessing import Process
+def multi_work(iter_function, totalProcess = 8, lenList = 2**16, base=0):
+    gap = lenList // totalProcess
+    process_list = []
+    print("Totally %d processes" % totalProcess)
+
+    for i in range(totalProcess):
+        process = Process(target=iter_function, args=(base + i * gap, base + (i + 1) * gap))
+        process.start()
+        process_list.append(process)
+
+    for t in process_list:
+        t.join()
+    print("Exiting Main Process")
     
 # a global table : differential -> the number of active sbox of the input differential 
 ACTIVE_SBOX_TABLE = compute_active_sbox_table()
@@ -83,7 +99,7 @@ class CipherN_analyzer():
         "NUM_ROUNDS": 10,
         "SBOX_BITS": 4,
         "NUM_SBOXES": 4,
-        "MIN_PROB": 0.01,
+        "MIN_PROB": 0.005,
         "PATH_MIN_PROB": 1/2**16,
         "Sbox": sbox,
         "Pbox": pbox,
@@ -95,7 +111,7 @@ class CipherN_analyzer():
         "do_inv_pbox": do_inv_pbox
     }
     sp_table = None
-    differential_characteristic_table = None
+    differential_characteristic_table = []
 
     def __init__(self, cipherN_paras = None) -> None:
         if cipherN_paras != None:
@@ -129,10 +145,10 @@ class CipherN_analyzer():
             result_table.append((permed_state, prob))
         return result_table
         
-    def compute_sbox_perm_table(self, saved=True):
+    def compute_sbox_perm_table(self, saved  = True, filter = True):
         sp_table = []
         for i in tqdm(range(2**16)):
-            table = self.compute_sbox_perm_diff(i)
+            table = self.compute_sbox_perm_diff(i,filter)
             sp_table.append(table)
         if saved:
             pickle.dump(sp_table, open("./sp_table.pickle", "wb"))
@@ -148,10 +164,8 @@ class CipherN_analyzer():
             print(error)
             return False
 
-    def compute_differential_characteristics(self, saved = False):
+    def compute_all_differential_characteristics(self):
         # have been computed 
-        if type(self.differential_characteristic_table) != type(None):
-            return self.differential_characteristic_table
         table = []
         for i in tqdm(range(2**16)):
             differential_characteristics_table = [[([i],0, 1)]]
@@ -177,13 +191,14 @@ class CipherN_analyzer():
                             diff_table.append((new_diff, new_active_sbox_num, new_prob))
                 differential_characteristics_table.append(diff_table)
             table.append(differential_characteristics_table)
-        if saved:
-            pickle.dump(table, open("./all_dc_table.pickle", "wb"))
-        self.differential_characteristic_table = table
+        self.differential_characteristic_table.extend(table)
         return table
-
+        
     def sort_differential_characteristics_by_prob(self, round_num=5, topN=10):
-        all_input_differential_characteristics = self.compute_differential_characteristics()
+        if len(self.differential_characteristic_table) != 0:
+            all_input_differential_characteristics = self.differential_characteristic_table
+        else:
+            all_input_differential_characteristics = self.compute_all_differential_characteristics()
         final_table = []
         for input_diff, differential_characteristic_i in enumerate(all_input_differential_characteristics):
             # item in  differential_characteristics[round_num] is:  (dc, dc_prob), sorted by dc_prob
@@ -193,19 +208,25 @@ class CipherN_analyzer():
                 continue
             else:
                 final_table += differential_characteristic_i_of_roundN
-        res = sorted(final_table, key=lambda x: x[-1], reverse=True)[1:topN+1]
+        res = sorted(final_table, key=lambda x: (-x[-1],x[1]))[1:topN+1]
         
-        print(f"[+] Top {topN} differential_characteristic (dc) of round {round_num} sorted by dc_prob")
+        print(f"[+] Top {topN}/{len(final_table)} differential_characteristic (dc) of round {round_num} sorted by dc_prob")
         for i in range(min(topN, len(res))):
             # undo the permutation in the last round
             res[i][0][-1] = do_inv_pbox(res[i][0][-1])
             print("*"*32,f"Top {i+1}","*"*32)
             print(f"dc = {tuple([parse_Sbox_input(s) for s in res[i][0]])}")
+            print(f"dc = {res[i][0]}")
             print(f"dc_probablity = {res[i][-1]}")
             print(f"active_sbox_num = {res[i][1]}")
+        print()
+        
             
     def sort_differential_characteristics_by_active_sbox_num(self, round_num=5, topN=10):
-        all_input_differential_characteristics = self.compute_differential_characteristics()
+        if len(self.differential_characteristic_table) != 0:
+            all_input_differential_characteristics = self.differential_characteristic_table
+        else:
+            all_input_differential_characteristics = self.compute_all_differential_characteristics()
         final_table = []
         for input_diff, differential_characteristic_i in enumerate(all_input_differential_characteristics):
             # item in  differential_characteristics[round_num] is:  (dc, dc_prob), sorted by dc_prob
@@ -215,7 +236,7 @@ class CipherN_analyzer():
                 continue
             else:
                 final_table += differential_characteristic_i_of_roundN
-        res = sorted(final_table, key=lambda x: x[1])[1:topN+1]
+        res = sorted(final_table, key=lambda x: (x[1],-x[-1]))[1:topN+1]
             
         print(f"[+] Top {topN} differential_characteristic (dc) of round {round_num} sorted by active_sbox_num")
         for i in range(min(topN, len(res))):
@@ -223,13 +244,17 @@ class CipherN_analyzer():
             res[i][0][-1] = do_inv_pbox(res[i][0][-1])
             print("*"*32,f"Top {i+1}","*"*32)
             print(f"dc = {tuple([parse_Sbox_input(s) for s in res[i][0]])}")
+            print(f"dc = {res[i][0]}")
             print(f"dc_probablity = {res[i][-1]}")
             print(f"active_sbox_num = {res[i][1]}")
+        print()
 
 if __name__ == "__main__":
     analyzer = CipherN_analyzer()
-    analyzer.compute_sbox_perm_table()
-    # analyzer.load_sbox_perm_table()
-    analyzer.compute_differential_characteristics()
-    analyzer.sort_differential_characteristics_by_prob(5, 10)
-    analyzer.sort_differential_characteristics_by_active_sbox_num(5, 10)
+    if not analyzer.load_sbox_perm_table():
+        analyzer.compute_sbox_perm_table()
+    # analyzer.compute_sbox_perm_table()
+    # analyzer.compute_all_differential_characteristics()
+    for nround in range(1,11):
+        analyzer.sort_differential_characteristics_by_prob(nround, 10)
+        analyzer.sort_differential_characteristics_by_active_sbox_num(nround, 10)
