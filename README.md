@@ -137,6 +137,14 @@ Here we give some results for reference.
   start_node = 15 ,end_nodes_list = [1, 256]
   ```
 
-  ![Directed_graph](C:\Users\31043\Desktop\Repo\Differential-Cryptanalysis-of-SPN\img\Directed_graph.png)
+  ![Directed_graph](./img/Directed_graph.png)
 
 <center>Figure 2：Directed Graph</center>
+
+
+
+## Reference
+
+- [1] Lars Ramkilde Knudsen and Matthew J. B. Robshaw. The block cipher companion. In Information Security and Cryptography, 2011. 
+- [2] Howard M. Heys. A tutorial on linear and differential cryptanalysis. Cryptologia, 26:189 – 221, 2002. 
+- [3] physics sec. Github repository: Differential-cryptanalysis. site. https://github.com/ physics-sec/Differential-Cryptanalysis.
