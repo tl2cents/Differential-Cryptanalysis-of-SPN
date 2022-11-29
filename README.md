@@ -11,7 +11,7 @@ Sbox ：
 | ------ | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 | S(*x*) | E    | 4    | D    | 1    | 2    | F    | B    | 8    | 3    | A    | 6    | C    | 5    | 9    | 0    | 7    |
 
-<center>Table 1：Sbox</center>
+
 
 Permutation
 
@@ -19,13 +19,17 @@ Permutation
 | ------ | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ---- |
 | P(*s*) | 1    | 5    | 9    | 13   | 2    | 6    | 10   | 14   | 3    | 7    | 11   | 15   | 4    | 8    | 12   | 16   |
 
-<center>Table 2：Permutation</center>
+
+
+
 
 The structure of our analyzed cipher is :
 
 ![cipherN](./img/cipherN.png)
 
-<center>Figure 1：CipherN</center>
+
+
+
 
 For more detailed manual analysis, see : `The block cipher companion. In Information Security and Cryptography, 2011` . The cipher and parameters are from the chapter 6. 
 
@@ -141,8 +145,6 @@ Here we give some results for reference.
 
 
 ![Directed_graph](./img/DirectedGraph.png)
-
-<center>Figure 2：Directed Graph</center>
 
 
 
