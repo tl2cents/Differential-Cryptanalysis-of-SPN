@@ -32,7 +32,8 @@ pbox = {0: 0, 1: 4, 2: 8, 3: 12, 4: 1, 5: 5, 6: 9, 7: 13,
 pbox_inv = {0: 0, 4: 1, 8: 2, 12: 3, 1: 4, 5: 5, 9: 6, 13: 7,
             2: 8, 6: 9, 10: 10, 14: 11, 3: 12, 7: 13, 11: 14, 15: 15}
 
-new_box = True
+# if you wanna test new sboxes and pboxes, you can set new_box = True
+new_box = False
 if new_box:
     sbox,sbox_inv = generate_Sbox()
     pbox,pbox_inv = generate_permutation()

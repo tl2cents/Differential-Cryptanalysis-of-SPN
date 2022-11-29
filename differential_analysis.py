@@ -99,7 +99,7 @@ class CipherN_analyzer():
         "NUM_ROUNDS": 10,
         "SBOX_BITS": 4,
         "NUM_SBOXES": 4,
-        "MIN_PROB": 0.005,
+        "MIN_PROB": 0.01,
         "PATH_MIN_PROB": 1/2**16,
         "Sbox": sbox,
         "Pbox": pbox,
