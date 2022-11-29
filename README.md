@@ -137,7 +137,10 @@ Here we give some results for reference.
   start_node = 15 ,end_nodes_list = [1, 256]
   ```
 
-  ![Directed_graph](./img/Directed_graph.png)
+
+
+
+![Directed_graph](./img/DirectedGraph.png)
 
 <center>Figure 2：Directed Graph</center>
 
